@@ -55,7 +55,8 @@ app.post("/create-entity", (req, res) => {
             console.log("Added document ", entity.name, " with ID: ", ref.id);
             res.json({
                 code: 200,
-                message: "Entity created with ID: " + ref.id,
+                message: "Entity created",
+                ref: ref.id,
             });
         })
         .catch((err) => {

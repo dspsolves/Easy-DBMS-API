@@ -71,7 +71,8 @@ curl --location --request POST '<b>URL</b>/create-entity'
 ```javascript
 {
     "code": 200,
-    "message": "Entity created with ID: " + referenceID
+    "message": "Entity created",
+    "ref": referenceID
 }
 ```
 
