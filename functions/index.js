@@ -95,9 +95,12 @@ function cleanerAttributes(values) {
             key: "",
             name: "",
             "data-type": "",
-            size: "",
             constraints: [""],
         };
+        attribute["group"] =
+            value[value["valueType"]]["fields"]["group"][
+                value[value["valueType"]]["fields"]["group"]["valueType"]
+            ];
         attribute["key"] =
             value[value["valueType"]]["fields"]["key"][
                 value[value["valueType"]]["fields"]["key"]["valueType"]
