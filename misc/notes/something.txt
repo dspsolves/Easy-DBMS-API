@@ -1,0 +1,17 @@
+Easy DBMS
+
+An interactive interface to visualise SQL Tables with the help of Entity Relationship Diagrams.
+
+Store entity information on cloud for future accessibility using our interactive platform.
+
+There's an educational module as well for beginners to teach how OOAD is useful for  your DB skills.
+
+Team projects which will have shared entities for collaborative learning and development.
+
+These entities could also be turned into SQL tables for data collection using our DB Module which is mainly used on enterprise level to store huge amount of data.
+
+The educational module is and will remain free for everyone.
+
+Objective :
+
+Collect entity information and store on firestore

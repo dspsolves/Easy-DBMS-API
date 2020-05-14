@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Easy DBMS - API Documentation</title>
+        <!-- Lightweight client-side loader that feature-detects and load polyfills only when necessary -->
+        <script src="https://cdn.jsdelivr.net/npm/@webcomponents/webcomponentsjs@2/webcomponents-loader.min.js"></script>
+        <!-- Load the element definition -->
+        <script
+            type="module"
+            src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@1/src/zero-md.min.js"
+        ></script>
+
+        <!-- Latest compiled and minified CSS -->
+        <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        />
+
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <style>
+            body {
+                background-color: white;
+            }
+            #holder {
+                margin: 40px 0px;
+                display: flex;
+                flex-direction: row;
+            }
+            #main {
+                /* margin: 40px 240px; */
+                padding: 64px;
+                background-color: white;
+                border: solid;
+                border-color: black;
+                border-radius: 4px;
+                border-width: 2px;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+                    0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div id="holder" class="row">
+                <div class="col-xs-1"></div>
+                <div id="main" class="col-xs-10">
+                    <!-- Simply set the `src` attribute to your MD file and win -->
+                    <zero-md src="documentation.md"></zero-md>
+                </div>
+                <div class="col-xs-1"></div>
+            </div>
+        </div>
+    </body>
+</html>
