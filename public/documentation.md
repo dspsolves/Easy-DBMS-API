@@ -12,9 +12,12 @@ curl --location --request GET '<b>URL</b>/knock'
 
 **RESPONSE**
 
-```html
-<h1>Easy DBMS</h1>
-<h3>I work. What about you?</h3>
+```javascript
+{
+    "code": 9107,
+    "message": "This route is just for fun. Make the same request from a browser to feel different. Refer to the API Documentation for more constructive approaches.",
+    "docAt": "https://easy-dbms.web.app/doc.html"
+}
 ```
 
 ---
@@ -119,16 +122,48 @@ curl --location --request GET '<b>URL</b>/read-entity?id=<b>referenceID</b>'
 ### Update Student Record
 
 <pre>
-curl --location --request PATCH '<b>URL</b>/update-entity'
+curl --location --request PATCH '<b>URL</b>/update-entity/id=<b>referenceID</b>'
+--header 'Content-Type: application/json'
+--data-raw '{
+    "name": "Student",
+    "attributes": [
+        {
+        	"group": "General",
+            "key": "PK",
+            "name": "UID",
+            "data-type": "varchar [9]",
+            "constraints": []
+        },
+        {
+        	"group": "General",
+            "key": "none",
+            "name": "Name",
+            "data-type": "varchar [27]",
+            "constraints": [
+                "NOT NULL"
+            ]
+        },
+        {
+        	"group": "Contact",
+            "key": "none",
+            "name": "Mobile",
+            "data-type": "char [10]",
+            "constraints": [
+            	"UNIQUE",
+                "NOT NULL"
+            ]
+        }
+    ],
+    "relationships": []
+}'
 </pre>
 
 **RESPONSE**
 
 ```javascript
 {
-    "code": 404,
-    "message": "This route is under construction. Refer to the API Documentation for alternative approaches.",
-    "docAt": "https://easy-dbms.web.app/doc.html"
+    "code": 200,
+    "message": "Entity Updated"
 }
 ```
 

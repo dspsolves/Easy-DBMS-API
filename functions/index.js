@@ -38,16 +38,24 @@ app.use((req, res, next) => {
 //Routes
 
 app.get("/knock", (req, res) => {
-    const misc = req.query.some ? "<h5>" + req.query.some + "</h5>" : "";
-    res.send("<h1>Easy DBMS</h1><h3>I work. What about you?</h3>" + misc);
+    var sender = req.headers["user-agent"];
+    if (sender.match(/^(Mozilla).*/)) {
+        const misc = req.query.some ? "<h5>" + req.query.some + "</h5>" : "";
+        res.send("<h1>Easy DBMS</h1><h3>I work. What about you?</h3>" + misc);
+    } else {
+        res.json({
+            code: 9107,
+            message:
+                "This route is just for fun. Make the same request from a browser to feel different. Refer to the API Documentation for more constructive approaches.",
+            docAt: "https://easy-dbms.web.app/doc.html",
+        });
+    }
 });
 
 // CREATE
 
 app.post("/create-entity", (req, res) => {
-    var entity = req.body;
-    console.log(entity);
-    console.log(JSON.stringify(entity));
+    const entity = req.body;
 
     db.collection("entities")
         .add(entity)
@@ -165,19 +173,29 @@ app.get("/read-entity", (req, res) => {
         });
 });
 
+function isEmpty(obj) {
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) return false;
+    }
+    return true;
+}
+
 app.get("/read-entities", (req, res) => {
     db.collection("entities")
         .get()
         .then((snapshot) => {
             var entities = [];
             snapshot.forEach((doc) => {
-                entities.push({
-                    id: doc.id,
-                    name:
+                var entity = { id: doc.id, name: "" };
+                if (!isEmpty(doc["_fieldsProto"])) {
+                    entity.name =
                         doc["_fieldsProto"]["name"][
                             doc["_fieldsProto"]["name"]["valueType"]
-                        ],
-                });
+                        ];
+                } else {
+                    entity.name = "BROKEN DOCUMENT - WILL BE DELETED";
+                }
+                entities.push(entity);
             });
             if (entities.length) {
                 res.json({
@@ -203,26 +221,22 @@ app.get("/read-entities", (req, res) => {
 // UPDATE
 
 app.patch("/update-entity", (req, res) => {
-    res.json({
-        code: 404,
-        message:
-            "This route is under construction. Refer to the API Documentation for alternative approaches.",
-        docAt: "https://easy-dbms.web.app/doc.html",
-    });
-    // db.collection("entities")
-    //     .doc(req.query.id)
-    //     .delete()
-    //     .then(() => {
-    //         res.json({
-    //             code: 200,
-    //             message: "Entity Deleted",
-    //         });
-    //     })
-    //     .catch((err) => {
-    //         console.log("Error getting documents", err);
-    //         res.status(500);
-    //         res.json({ code: 500, message: "Some Issue", error: err.message });
-    //     });
+    var entity = req.body;
+
+    db.collection("entities")
+        .doc(req.query.id)
+        .set(entity)
+        .then(() => {
+            res.json({
+                code: 200,
+                message: "Entity Updated",
+            });
+        })
+        .catch((err) => {
+            console.log("Error updating documents", err);
+            res.status(500);
+            res.json({ code: 500, message: "Some Issue", error: err.message });
+        });
 });
 
 // DELETE
