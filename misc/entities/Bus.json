@@ -2,33 +2,28 @@
     "name": "Bus",
     "attributes": [
         {
-            "group": "General",
             "key": "PK",
             "name": "Plate",
             "data-type": "char [10]",
             "constraints": []
         },
         {
-            "group": "General",
             "key": "none",
             "name": "Route",
             "data-type": "char [2]",
             "constraints": ["NOT NULL"]
         },
         {
-            "group": "Technical",
             "key": "none",
             "name": "Chassis Number",
             "data-type": "varchar [24]",
             "constraints": ["NOT NULL"]
         },
         {
-            "group": "Technical",
             "key": "none",
             "name": "Last Serviced",
             "data-type": "date",
             "constraints": ["NOT NULL"]
         }
-    ],
-    "relationships": []
+    ]
 }
