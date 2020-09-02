@@ -1,12 +1,7 @@
 const functions = require("firebase-functions");
 const express = require("express");
 const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const admin = require("firebase-admin");
 
-admin.initializeApp();
-
-let db = admin.firestore();
 const app = express();
 
 //Middleware
@@ -21,8 +16,7 @@ app.use((req, res, next) => {
     next();
 });
 app.use(morgan("dev"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+express.json();
 
 //Security
 
@@ -52,210 +46,66 @@ app.get("/knock", (req, res) => {
     }
 });
 
-// CREATE
+// CREATE TABLE
 
-app.post("/create-entity", (req, res) => {
+const removeSurroundingSquareBraces = (str) => str.replace(/[\[\]']+/g, "");
+
+function getDataType(type) {
+    let datatype = "",
+        temp = type.split(" ");
+    if (temp[0] === "varchar")
+        datatype = `${temp[0].toUpperCase()}(${removeSurroundingSquareBraces(
+            temp[1]
+        )})`;
+    else if (temp[0] === "char")
+        datatype = `${temp[0].toUpperCase()}(${removeSurroundingSquareBraces(
+            temp[1]
+        )})`;
+    else if (temp[0] === "int") datatype = temp[0].toUpperCase();
+    else if (temp[0] === "date") datatype = temp[0].toUpperCase();
+
+    return datatype;
+}
+
+function parseConstraints(cons) {
+    return cons.join(" ");
+}
+
+function parseColumnData(columns) {
+    let attributes = [],
+        primaryKey = "";
+    columns.forEach((column) => {
+        attribute = [];
+        if (column.key === "PK") primaryKey = `PRIMARY KEY ( ${column.name} )`;
+
+        attribute.push(column.name);
+        attribute.push(getDataType(column.datatype));
+        attribute.push(parseConstraints(column.constraints));
+
+        attributes.push(attribute.filter((n) => n).join(" "));
+    });
+    attributes.push(primaryKey);
+
+    return attributes.join(", ");
+}
+
+function buildQuery(type, entity) {
+    let query = "";
+    if (type === "create-table") {
+        query += `create table ${entity.name}`;
+        query += ` (`;
+        query += parseColumnData(entity.attributes);
+        query += `);`;
+    }
+    return query;
+}
+
+app.post("/create-table", (req, res) => {
     const entity = req.body;
 
-    db.collection("entities")
-        .add(entity)
-        .then((ref) => {
-            console.log("Added document ", entity.name, " with ID: ", ref.id);
-            res.json({
-                code: 200,
-                message: "Entity created",
-                ref: ref.id,
-            });
-        })
-        .catch((err) => {
-            console.log({ error: err });
-            res.status(500);
-            res.json({
-                code: 500,
-                message: "Some issue",
-                error: err,
-            });
-        });
-});
+    const query = buildQuery("create-table", entity);
 
-// READ
-
-function cleanerRelationships(values) {
-    var cleaned = [];
-    // values.forEach((value) => {
-    //     cleaned.push(value[value["valueType"]]);
-    // });
-    return cleaned;
-}
-
-function cleanerConstraints(values) {
-    var cleaned = [];
-    values.forEach((value) => {
-        cleaned.push(value[value["valueType"]]);
-    });
-    return cleaned;
-}
-
-function cleanerAttributes(values) {
-    var cleaned = [];
-    values.forEach((value) => {
-        var attribute = {
-            group: "",
-            key: "",
-            name: "",
-            "data-type": "",
-            constraints: [""],
-        };
-        attribute["group"] =
-            value[value["valueType"]]["fields"]["group"][
-                value[value["valueType"]]["fields"]["group"]["valueType"]
-            ];
-        attribute["key"] =
-            value[value["valueType"]]["fields"]["key"][
-                value[value["valueType"]]["fields"]["key"]["valueType"]
-            ];
-        attribute["name"] =
-            value[value["valueType"]]["fields"]["name"][
-                value[value["valueType"]]["fields"]["name"]["valueType"]
-            ];
-        attribute["data-type"] =
-            value[value["valueType"]]["fields"]["data-type"][
-                value[value["valueType"]]["fields"]["data-type"]["valueType"]
-            ];
-        attribute["constraints"] = cleanerConstraints(
-            value[value["valueType"]]["fields"]["constraints"][
-                value[value["valueType"]]["fields"]["constraints"]["valueType"]
-            ]["values"]
-        );
-        cleaned.push(attribute);
-    });
-    return cleaned;
-}
-
-app.get("/read-entity", (req, res) => {
-    db.collection("entities")
-        .doc(req.query.id)
-        .get()
-        .then((doc) => {
-            if (!doc.exists) {
-                res.json({
-                    code: 200,
-                    message: "Entity Doesn't Exist",
-                    data: null,
-                });
-            } else {
-                var entity = { name: "", relationships: [], attributes: [] };
-                entity.name =
-                    doc["_fieldsProto"]["name"][
-                        doc["_fieldsProto"]["name"]["valueType"]
-                    ];
-                entity.relationships = cleanerRelationships(
-                    doc["_fieldsProto"]["relationships"][
-                        doc["_fieldsProto"]["relationships"]["valueType"]
-                    ]["values"]
-                );
-                entity.attributes = cleanerAttributes(
-                    doc["_fieldsProto"]["attributes"][
-                        doc["_fieldsProto"]["attributes"]["valueType"]
-                    ]["values"]
-                );
-                res.json({
-                    code: 200,
-                    message: "Entity Read",
-                    data: entity,
-                });
-            }
-        })
-        .catch((err) => {
-            console.log("Error getting documents", err);
-            res.status(500);
-            res.json({ code: 500, message: "Some Issue", error: err });
-        });
-});
-
-function isEmpty(obj) {
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) return false;
-    }
-    return true;
-}
-
-app.get("/read-entities", (req, res) => {
-    db.collection("entities")
-        .get()
-        .then((snapshot) => {
-            var entities = [];
-            snapshot.forEach((doc) => {
-                var entity = { id: doc.id, name: "" };
-                if (!isEmpty(doc["_fieldsProto"])) {
-                    entity.name =
-                        doc["_fieldsProto"]["name"][
-                            doc["_fieldsProto"]["name"]["valueType"]
-                        ];
-                } else {
-                    entity.name = "BROKEN DOCUMENT - WILL BE DELETED";
-                }
-                entities.push(entity);
-            });
-            if (entities.length) {
-                res.json({
-                    code: 200,
-                    message: "Entities Read",
-                    data: entities,
-                });
-            } else {
-                res.json({
-                    code: 200,
-                    message: "Entities Couldn't Be Read",
-                    data: null,
-                });
-            }
-        })
-        .catch((err) => {
-            console.log("Error getting documents", err);
-            res.status(500);
-            res.json({ code: 500, message: "Some Issue", error: err });
-        });
-});
-
-// UPDATE
-
-app.patch("/update-entity", (req, res) => {
-    var entity = req.body;
-
-    db.collection("entities")
-        .doc(req.query.id)
-        .set(entity)
-        .then(() => {
-            res.json({
-                code: 200,
-                message: "Entity Updated",
-            });
-        })
-        .catch((err) => {
-            console.log("Error updating documents", err);
-            res.status(500);
-            res.json({ code: 500, message: "Some Issue", error: err.message });
-        });
-});
-
-// DELETE
-
-app.delete("/delete-entity", (req, res) => {
-    db.collection("entities")
-        .doc(req.query.id)
-        .delete()
-        .then(() => {
-            res.json({
-                code: 200,
-                message: "Entity Deleted",
-            });
-        })
-        .catch((err) => {
-            console.log("Error getting documents", err);
-            res.status(500);
-            res.json({ code: 500, message: "Some Issue", error: err.message });
-        });
+    res.json({ data: query });
 });
 
 //Error Handling
